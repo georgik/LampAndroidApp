@@ -1,6 +1,7 @@
 package com.sinusgear.iot.lampapp;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ImageButton lightBulbButton = (ImageButton) findViewById(R.id.lightBulbButton);
+        final ImageButton lightBulbButton = (ImageButton) findViewById(R.id.lightBulbButton);
         lightBulbButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -79,6 +80,9 @@ public class MainActivity extends AppCompatActivity {
 
                 if (isRelayEnabled) {
                     value = "on";
+                    lightBulbButton.setImageResource(R.drawable.lightbulb);
+                } else {
+                    lightBulbButton.setImageResource(R.drawable.lightbulbdark);
                 }
                 getHttpRequest(value);
             }
