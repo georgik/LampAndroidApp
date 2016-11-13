@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Lamp Control</string>
+    <string name="appwidget_text">LAMP</string>
+    <string name="add_widget">Add widget</string>
+</resources>
