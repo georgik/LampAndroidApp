@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
+    <!-- Required for MQTT Client -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application android:allowBackup="true" android:label="@string/app_name"
         android:icon="@drawable/lightbulbicon" android:theme="@style/AppTheme">
 
@@ -26,6 +29,13 @@
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/lamp_widget_info" />
         </receiver>
+
+
+        <service android:name="com.sinusgear.iot.lampapp.LampMqttService" >
+        </service>
+        <service android:name="org.eclipse.paho.android.service.MqttService">
+        </service>
+
 
     </application>
 

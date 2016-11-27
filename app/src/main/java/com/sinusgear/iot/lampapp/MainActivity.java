@@ -1,24 +1,29 @@
 package com.sinusgear.iot.lampapp;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
-import android.graphics.drawable.Drawable;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
-
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-
-import cz.msebera.android.httpclient.Header;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = MainActivity.class.getCanonicalName();
     protected boolean isRelayEnabled = false;
-    protected boolean lastWifiState = false;
+
+    final String serverUri = "tcp://iot.sinusgear.com:1883";
+    final String clientId = "AndroidClient";
 
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
@@ -32,46 +37,44 @@ public class MainActivity extends AppCompatActivity {
         wifiManager.setWifiEnabled(status);
     }
 
-    /**
-     * Send HTTP request. When Wifi is down it will turn it on and then off.
-     * @param state
-     */
-    private void getHttpRequest(String state) {
-        lastWifiState = isNetworkAvailable();
-        if (!lastWifiState) {
-            changeWifiStatus(true);
+
+    private void sendRequestToDevice(String value) {
+        // Try to use MQTT for request delivery. Possible fallback to direct communication
+        if (mqttService != null) {
+            mqttService.sendCommand(value);
+        } else {
+            Log.d(TAG, "Unable to send request. MQTT is not accessible");
         }
-
-        AsyncHttpClient asyncClient = new AsyncHttpClient();
-        asyncClient.get("http://192.168.1.50/relay=" + state, new AsyncHttpResponseHandler() {
-            @Override
-            public void onStart() {
-            }
-
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                if (!lastWifiState) {
-                    changeWifiStatus(false);
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                if (!lastWifiState) {
-                    changeWifiStatus(false);
-                }
-            }
-
-        });
     }
 
+    private void setLightIcon(String value) {
+        if (lightBulbButton == null) {
+            return;
+        }
+
+        if (value.equals("on")) {
+            lightBulbButton.setBackgroundResource(R.drawable.lightbulb);
+            lightBulbButton.setImageResource(R.drawable.lightbulb);
+            isRelayEnabled = true;
+        } else {
+            lightBulbButton.setBackgroundResource(R.drawable.lightbulbdark);
+            lightBulbButton.setImageResource(R.drawable.lightbulb);
+            isRelayEnabled = false;
+        }
+        statusText.setText(value);
+    }
+
+    private ImageButton lightBulbButton;
+    private TextView statusText;
+    LampBroadcastReceiver lampBroadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final ImageButton lightBulbButton = (ImageButton) findViewById(R.id.lightBulbButton);
+        statusText = (TextView) findViewById(R.id.statusText);
+        lightBulbButton = (ImageButton) findViewById(R.id.lightBulbButton);
         lightBulbButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -80,13 +83,64 @@ public class MainActivity extends AppCompatActivity {
 
                 if (isRelayEnabled) {
                     value = "on";
-                    lightBulbButton.setImageResource(R.drawable.lightbulb);
-                } else {
-                    lightBulbButton.setImageResource(R.drawable.lightbulbdark);
                 }
-                getHttpRequest(value);
+                sendRequestToDevice(value);
             }
         });
-
     }
+
+
+    LampMqttService.LocalBinder mBinder;
+    LampMqttService mqttService;
+
+    protected void onResume() {
+        super.onResume();
+
+        // We need internet connection
+        if (!isNetworkAvailable()) {
+            changeWifiStatus(true);
+        }
+
+        IntentFilter intentFilter = new IntentFilter(LampMqttService.MQTT_RECEIVED_ACTION);
+        intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+        lampBroadcastReceiver = new LampBroadcastReceiver();
+        registerReceiver(lampBroadcastReceiver, intentFilter);
+        Intent serviceIntent = new Intent();
+        serviceIntent.setClassName(getApplicationContext(), LampMqttService.MQTT_SERVICE_NAME);
+        serviceIntent.setPackage("com.sinusgear.iot.lampapp");
+
+        bindService(serviceIntent,
+                new ServiceConnection() {
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    public void onServiceConnected(ComponentName className, final IBinder service)
+                    {
+                        Log.d(TAG, "Service connected");
+                        mBinder = (LampMqttService.LocalBinder) service;
+                        mqttService = mBinder.getServerInstance();
+                        mqttService.initializeConnection(serverUri, clientId);
+                    }
+                    @Override
+                    public void onServiceDisconnected(ComponentName name) {
+
+                    }
+                },
+                Context.BIND_AUTO_CREATE);
+    }
+
+    public void onPause() {
+        super.onPause();
+        unregisterReceiver(lampBroadcastReceiver);
+    }
+
+    public class LampBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String value = intent.getStringExtra("value");
+
+            setLightIcon(value);
+        }
+    }
+
 }
