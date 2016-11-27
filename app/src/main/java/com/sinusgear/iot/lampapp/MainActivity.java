@@ -28,6 +28,11 @@ public class MainActivity extends AppCompatActivity {
 
     final String serverUri = "tcp://iot.sinusgear.com:1883";
 
+    private ImageButton lightBulbButton;
+    private TextView statusText;
+    LampBroadcastReceiver lampBroadcastReceiver;
+    private ServiceConnection mServiceConnection;
+
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -66,10 +71,6 @@ public class MainActivity extends AppCompatActivity {
         }
         statusText.setText(value);
     }
-
-    private ImageButton lightBulbButton;
-    private TextView statusText;
-    LampBroadcastReceiver lampBroadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,37 +131,48 @@ public class MainActivity extends AppCompatActivity {
             changeWifiStatus(true);
         }
 
-        IntentFilter intentFilter = new IntentFilter(LampMqttService.MQTT_RECEIVED_ACTION);
-        intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
-        lampBroadcastReceiver = new LampBroadcastReceiver();
-        registerReceiver(lampBroadcastReceiver, intentFilter);
-        Intent serviceIntent = new Intent();
-        serviceIntent.setClassName(getApplicationContext(), LampMqttService.MQTT_SERVICE_NAME);
-        serviceIntent.setPackage("com.sinusgear.iot.lampapp");
+        if (mServiceConnection == null) {
 
-        bindService(serviceIntent,
-                new ServiceConnection() {
-                    @SuppressWarnings("unchecked")
-                    @Override
-                    public void onServiceConnected(ComponentName className, final IBinder service)
-                    {
-                        Log.d(TAG, "Service connected");
-                        mBinder = (LampMqttService.LocalBinder) service;
-                        mqttService = mBinder.getServerInstance();
-                        mqttService.initializeConnection(serverUri, getClientId());
-                    }
-                    @Override
-                    public void onServiceDisconnected(ComponentName name) {
+            IntentFilter intentFilter = new IntentFilter(LampMqttService.MQTT_RECEIVED_ACTION);
+            intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+            lampBroadcastReceiver = new LampBroadcastReceiver();
+            registerReceiver(lampBroadcastReceiver, intentFilter);
+            Intent serviceIntent = new Intent();
+            serviceIntent.setClassName(getApplicationContext(), LampMqttService.MQTT_SERVICE_NAME);
+            serviceIntent.setPackage("com.sinusgear.iot.lampapp");
 
-                    }
-                },
-                Context.BIND_AUTO_CREATE);
+            mServiceConnection = new ServiceConnection() {
+                @SuppressWarnings("unchecked")
+                @Override
+                public void onServiceConnected(ComponentName className, final IBinder service) {
+                    Log.d(TAG, "Service connected");
+                    mBinder = (LampMqttService.LocalBinder) service;
+                    mqttService = mBinder.getServerInstance();
+                    mqttService.initializeConnection(serverUri, getClientId());
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName name) {
+
+                }
+            };
+
+            bindService(serviceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+        }
+
     }
 
     public void onPause() {
         super.onPause();
+
+        if (mServiceConnection != null) {
+            mqttService.disconnect();
+            unbindService(mServiceConnection);
+        }
+
         unregisterReceiver(lampBroadcastReceiver);
     }
+
 
     public class LampBroadcastReceiver extends BroadcastReceiver {
 
