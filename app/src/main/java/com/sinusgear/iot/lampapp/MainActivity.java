@@ -168,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
         if (mServiceConnection != null) {
             mqttService.disconnect();
             unbindService(mServiceConnection);
+            mServiceConnection = null;
         }
 
         unregisterReceiver(lampBroadcastReceiver);
