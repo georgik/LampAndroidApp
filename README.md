@@ -25,7 +25,6 @@ Values of server and rooms are hardcoded. You can change them to suit
 yout configuration.
 
 - MainActivity.serverUri - set to your MQTT server
-- MainActivity.clientId - set to your Client ID at MQTT server
 - LampMqttService.subscriptionTopic - MQTT topic where state of relay is being broadcasted
 - LampMqttService.publishTopic - MQTT topic where client can send request to change state of relay
 

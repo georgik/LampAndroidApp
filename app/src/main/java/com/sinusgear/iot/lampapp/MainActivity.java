@@ -11,11 +11,15 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,7 +27,6 @@ public class MainActivity extends AppCompatActivity {
     protected boolean isRelayEnabled = false;
 
     final String serverUri = "tcp://iot.sinusgear.com:1883";
-    final String clientId = "AndroidClient";
 
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
@@ -93,6 +96,32 @@ public class MainActivity extends AppCompatActivity {
     LampMqttService.LocalBinder mBinder;
     LampMqttService mqttService;
 
+    private String getClientId() {
+        String deviceId = Settings.Secure.getString(this.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        String deviceString;
+        try {
+            MessageDigest digest = java.security.MessageDigest
+                    .getInstance("SHA-1");
+            digest.update(deviceId.getBytes());
+            byte messageDigest[] = digest.digest();
+
+            // Create Hex String
+            StringBuilder hexString = new StringBuilder();
+            for (byte aMessageDigest : messageDigest) {
+                String h = Integer.toHexString(0xFF & aMessageDigest);
+                while (h.length() < 2)
+                    h = "0" + h;
+                hexString.append(h);
+            }
+            deviceString = hexString.toString().substring(0,6);
+
+        } catch (NoSuchAlgorithmException e) {
+            deviceString = "Unknown";
+        }
+        return "Android-" + android.os.Build.MODEL + "-" + deviceString;
+    }
+
     protected void onResume() {
         super.onResume();
 
@@ -118,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Service connected");
                         mBinder = (LampMqttService.LocalBinder) service;
                         mqttService = mBinder.getServerInstance();
-                        mqttService.initializeConnection(serverUri, clientId);
+                        mqttService.initializeConnection(serverUri, getClientId());
                     }
                     @Override
                     public void onServiceDisconnected(ComponentName name) {
