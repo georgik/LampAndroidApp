@@ -186,20 +186,13 @@ public class LampMqttService extends Service implements MqttCallbackExtended, IM
             });
 
 
-        } catch (MqttException ex){
+        } catch (MqttException ex) {
             ex.printStackTrace();
         }
     }
 
     public void disconnect() {
-        if (mqttAndroidClient != null) {
-            try {
-                mqttAndroidClient.disconnect();
-                mqttAndroidClient.unregisterResources();
-            } catch (MqttException e) {
-                Log.d(TAG, "Unable to disconnect");
-            }
-        }
+        mqttAndroidClient.unregisterResources();
     }
 
     public int onStartCommand(final Intent intent, int flags, final int startId) {
