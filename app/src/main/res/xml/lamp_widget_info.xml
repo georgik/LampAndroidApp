@@ -9,7 +9,7 @@
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/lamp_widget"
     android:resizeMode="horizontal"
-    android:widgetCategory="home_screen"
+    android:widgetCategory="home_screen|keyguard"
     android:previewImage="@drawable/lightbulb"
     >
 </appwidget-provider>

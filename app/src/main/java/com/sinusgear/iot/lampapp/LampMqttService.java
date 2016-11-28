@@ -26,7 +26,7 @@ import java.io.UnsupportedEncodingException;
 
 public class LampMqttService extends Service implements MqttCallbackExtended, IMqttActionListener, IMqttMessageListener {
 
-    private static final String TAG = MainActivity.class.getCanonicalName();
+    private static final String TAG = LampMqttService.class.getCanonicalName();
 
     public static final String MQTT_SERVICE_NAME = "com.sinusgear.iot.lampapp.LampMqttService";
     final static String MQTT_RECEIVED_ACTION = "com.sinusgear.iot.lampapp.LampMqttService.MQTT_RECEIVED";

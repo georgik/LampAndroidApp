@@ -7,12 +7,13 @@
     android:background="#55000000">
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/lightbulbSwitch"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:contentDescription="@string/app_name"
-        android:src="@drawable/lightbulb"/>
+        android:src="@drawable/lightbulb"
+        />
 
 
 </LinearLayout>
