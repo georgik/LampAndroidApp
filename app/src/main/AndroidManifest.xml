@@ -30,6 +30,10 @@
                 <action android:name="com.sinusgear.iot.lampapp.LampMqttService.MQTT_RECEIVED"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
+            <intent-filter>
+                <action android:name="com.sinusgear.iot.lampapp.LampWidgetProvider.MQTT_TOGGLE" />
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/lamp_widget_info" />
         </receiver>

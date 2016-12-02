@@ -11,22 +11,16 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getCanonicalName();
     protected boolean isRelayEnabled = false;
-
-    final String serverUri = "tcp://iot.sinusgear.com:1883";
 
     private ImageButton lightBulbButton;
     private TextView statusText;
@@ -72,10 +66,20 @@ public class MainActivity extends AppCompatActivity {
         statusText.setText(value);
     }
 
+    TextView humidityText;
+    TextView temperatureText;
+    TextView heatText;
+    TextView pirText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        humidityText = (TextView) findViewById(R.id.humidityText);
+        temperatureText = (TextView) findViewById(R.id.temperatureText);
+        heatText = (TextView) findViewById(R.id.heatText);
+        pirText = (TextView) findViewById(R.id.pirText);
 
         statusText = (TextView) findViewById(R.id.statusText);
         lightBulbButton = (ImageButton) findViewById(R.id.lightBulbButton);
@@ -91,41 +95,6 @@ public class MainActivity extends AppCompatActivity {
                 sendRequestToDevice(value);
             }
         });
-    }
-
-
-    LampMqttService.LocalBinder mBinder;
-    LampMqttService mqttService;
-
-    private String getClientId() {
-        String deviceId = Settings.Secure.getString(this.getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-        String deviceString;
-        try {
-            MessageDigest digest = java.security.MessageDigest
-                    .getInstance("SHA-1");
-            digest.update(deviceId.getBytes());
-            byte messageDigest[] = digest.digest();
-
-            // Create Hex String
-            StringBuilder hexString = new StringBuilder();
-            for (byte aMessageDigest : messageDigest) {
-                String h = Integer.toHexString(0xFF & aMessageDigest);
-                while (h.length() < 2)
-                    h = "0" + h;
-                hexString.append(h);
-            }
-            deviceString = hexString.toString().substring(0,6);
-
-        } catch (NoSuchAlgorithmException e) {
-            deviceString = "Unknown";
-        }
-        return "Android-" + android.os.Build.MODEL + "-" + deviceString;
-    }
-
-    protected void onResume() {
-        super.onResume();
-
         // We need internet connection
         if (!isNetworkAvailable()) {
             changeWifiStatus(true);
@@ -148,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Service connected");
                     mBinder = (LampMqttService.LocalBinder) service;
                     mqttService = mBinder.getServerInstance();
-                    mqttService.initializeConnection(serverUri, getClientId());
+                    mqttService.initializeConnection();
                 }
 
                 @Override
@@ -162,9 +131,23 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    LampMqttService.LocalBinder mBinder;
+    LampMqttService mqttService;
+
+    protected void onResume() {
+        super.onResume();
+
+
+    }
+
     public void onPause() {
         super.onPause();
 
+    }
+
+    @Override
+    public void onDestroy() {
         if (mServiceConnection != null) {
             mqttService.disconnect();
             unbindService(mServiceConnection);
@@ -172,6 +155,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         unregisterReceiver(lampBroadcastReceiver);
+
+        super.onDestroy();
     }
 
 
@@ -179,9 +164,32 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            String topic = intent.getStringExtra("topic");
             String value = intent.getStringExtra("value");
 
-            setLightIcon(value);
+            if (topic.equals("relay")) {
+                setLightIcon(value);
+            }
+
+            if (topic.equals("temperature")) {
+                temperatureText.setText("Temperature: " + value + "°C");
+            }
+
+            if (topic.equals("humidity")) {
+                humidityText.setText("Humidity: " + value);
+            }
+
+            if (topic.equals("heat")) {
+                heatText.setText("Heat index:" + value);
+            }
+
+            if (topic.equals("pir")) {
+                if (value.equals("high")) {
+                    pirText.setText("Movement: ---");
+                } else {
+                    pirText.setText("Movement: DETECTED");
+                }
+            }
         }
     }
 

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -22,6 +23,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 
 public class LampMqttService extends Service implements MqttCallbackExtended, IMqttActionListener, IMqttMessageListener {
@@ -32,7 +35,9 @@ public class LampMqttService extends Service implements MqttCallbackExtended, IM
     final static String MQTT_RECEIVED_ACTION = "com.sinusgear.iot.lampapp.LampMqttService.MQTT_RECEIVED";
     final static String MQTT_SEND_ACTION = "com.sinusgear.iot.lampapp.LampMqttService.MQTT_SEND";
 
-    final String subscriptionTopic = "/home/bedroom/relay";
+    final String serverUri = "tcp://iot.sinusgear.com:1883";
+
+    final String subscriptionTopic = "/home/+/+";
     final String publishTopic = "/home/bedroom/command";
 
     MqttAndroidClient mqttAndroidClient;
@@ -83,11 +88,12 @@ public class LampMqttService extends Service implements MqttCallbackExtended, IM
     }
 
 
-    public void sendBroadcast(String value) {
+    public void sendBroadcast(String topic, String value) {
         Intent intent = new Intent();
         intent.setAction(MQTT_RECEIVED_ACTION);
         intent.addCategory(Intent.CATEGORY_DEFAULT);
         intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        intent.putExtra("topic", topic);
         intent.putExtra("value", value);
         sendBroadcast(intent);
     }
@@ -96,9 +102,34 @@ public class LampMqttService extends Service implements MqttCallbackExtended, IM
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         String value = new String(message.getPayload());
         Log.d(TAG, "Message: " + topic + " : " + value);
-        if ((value.equals("on")) || (value.equals("off"))) {
 
-            sendBroadcast(value);
+        // Do not process commands
+        if (topic.contains("command")) {
+            return;
+        }
+
+        if (topic.endsWith("relay")) {
+            if ((value.equals("on")) || (value.equals("off"))) {
+
+                sendBroadcast("relay", value);
+            }
+            return;
+        }
+
+        if (topic.endsWith("temperature")) {
+            sendBroadcast("temperature", value);
+        }
+
+        if (topic.endsWith("humidity")) {
+            sendBroadcast("humidity", value);
+        }
+
+        if (topic.endsWith("heat")) {
+            sendBroadcast("heat", value);
+        }
+
+        if (topic.endsWith("pir")) {
+            sendBroadcast("pir", value);
         }
     }
 
@@ -156,14 +187,45 @@ public class LampMqttService extends Service implements MqttCallbackExtended, IM
         super.onDestroy();
     }
 
-    public void initializeConnection(String serverUri, String clientId) {
+    private String getClientId() {
+        String deviceId = Settings.Secure.getString(this.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        String deviceString;
+        try {
+            MessageDigest digest = java.security.MessageDigest
+                    .getInstance("SHA-1");
+            digest.update(deviceId.getBytes());
+            byte messageDigest[] = digest.digest();
 
+            // Create Hex String
+            StringBuilder hexString = new StringBuilder();
+            for (byte aMessageDigest : messageDigest) {
+                String h = Integer.toHexString(0xFF & aMessageDigest);
+                while (h.length() < 2)
+                    h = "0" + h;
+                hexString.append(h);
+            }
+            deviceString = hexString.toString().substring(0,6);
+
+        } catch (NoSuchAlgorithmException e) {
+            deviceString = "Unknown";
+        }
+        return "Android-" + android.os.Build.MODEL + "-" + deviceString;
+    }
+
+    String extraCommand = null;
+
+    public void initializeConnection() {
+        if (mqttAndroidClient != null) {
+            return;
+        }
+        final String localCommand = extraCommand;
         registerLocalReceivers();
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setAutomaticReconnect(true);
         mqttConnectOptions.setCleanSession(false);
 
-        mqttAndroidClient = new MqttAndroidClient(this, serverUri, clientId);
+        mqttAndroidClient = new MqttAndroidClient(this, serverUri, getClientId());
         mqttAndroidClient.setCallback(this);
 
         try {
@@ -177,6 +239,11 @@ public class LampMqttService extends Service implements MqttCallbackExtended, IM
                     disconnectedBufferOptions.setDeleteOldestMessages(false);
                     mqttAndroidClient.setBufferOpts(disconnectedBufferOptions);
                     subscribeToTopic();
+                    if (localCommand != null) {
+                        if (localCommand.equals("toggle")) {
+                            sendCommand("toggle");
+                        }
+                    }
                 }
 
                 @Override
