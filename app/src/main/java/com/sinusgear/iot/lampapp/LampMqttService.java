@@ -131,6 +131,10 @@ public class LampMqttService extends Service implements MqttCallbackExtended, IM
         if (topic.endsWith("pir")) {
             sendBroadcast("pir", value);
         }
+
+        if (topic.endsWith("air")) {
+            sendBroadcast("air", value);
+        }
     }
 
     public void sendCommand(String value) {

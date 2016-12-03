@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     TextView temperatureText;
     TextView heatText;
     TextView pirText;
+    TextView airText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
         temperatureText = (TextView) findViewById(R.id.temperatureText);
         heatText = (TextView) findViewById(R.id.heatText);
         pirText = (TextView) findViewById(R.id.pirText);
+        airText = (TextView) findViewById(R.id.airText);
 
         statusText = (TextView) findViewById(R.id.statusText);
         lightBulbButton = (ImageButton) findViewById(R.id.lightBulbButton);
@@ -185,10 +187,14 @@ public class MainActivity extends AppCompatActivity {
 
             if (topic.equals("pir")) {
                 if (value.equals("high")) {
-                    pirText.setText("Movement: ---");
-                } else {
                     pirText.setText("Movement: DETECTED");
+                } else {
+                    pirText.setText("Movement: ---");
                 }
+            }
+
+            if (topic.equals("air")) {
+                airText.setText("Air quality: " + value);
             }
         }
     }
