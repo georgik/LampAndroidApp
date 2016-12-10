@@ -47,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void sendRequestToDevice(String value) {
-        // Try to use MQTT for request delivery. Possible fallback to direct communication
         if (mqttService != null) {
             mqttService.sendCommand(value);
         } else {
@@ -83,12 +82,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 isRelayEnabled = !isRelayEnabled;
-                String value = "off";
-
-                if (isRelayEnabled) {
-                    value = "on";
-                }
-                sendRequestToDevice(value);
+                sendRequestToDevice("toggle");
             }
         });
     }
