@@ -35,7 +35,7 @@ public class LampMqttService extends Service implements MqttCallbackExtended, IM
     final static String MQTT_RECEIVED_ACTION = "com.sinusgear.iot.lampapp.LampMqttService.MQTT_RECEIVED";
     final static String MQTT_SEND_ACTION = "com.sinusgear.iot.lampapp.LampMqttService.MQTT_SEND";
 
-    final String serverUri = "tcp://iot.sinusgear.com:1883";
+    final String serverUri = "tcp://iot.georgik.rocks:1883";
 
     final String subscriptionTopic = "/home/+/+";
     final String publishTopic = "/home/bedroom/command";
