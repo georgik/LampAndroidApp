@@ -9,7 +9,7 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:orientation="vertical"
     android:gravity="center"
-    tools:context="com.sinusgear.iot.lampapp.MainActivity">
+    tools:context="rocks.georgik.iot.lampapp.MainActivity">
 
     <ImageButton
         android:id="@+id/lightBulbButton"

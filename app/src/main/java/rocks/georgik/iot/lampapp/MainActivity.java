@@ -1,4 +1,4 @@
-package com.sinusgear.iot.lampapp;
+package rocks.georgik.iot.lampapp;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
             registerReceiver(lampBroadcastReceiver, intentFilter);
             Intent serviceIntent = new Intent();
             serviceIntent.setClassName(getApplicationContext(), LampMqttService.MQTT_SERVICE_NAME);
-            serviceIntent.setPackage("com.sinusgear.iot.lampapp");
+            serviceIntent.setPackage("rocks.georgik.iot.lampapp");
 
             mServiceConnection = new ServiceConnection() {
                 @SuppressWarnings("unchecked")

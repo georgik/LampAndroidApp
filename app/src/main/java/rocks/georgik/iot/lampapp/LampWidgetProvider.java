@@ -1,4 +1,4 @@
-package com.sinusgear.iot.lampapp;
+package rocks.georgik.iot.lampapp;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -13,7 +13,7 @@ public class LampWidgetProvider extends AppWidgetProvider {
 
     private static final String TAG = LampWidgetProvider.class.getCanonicalName();
     private static boolean isServiceRunning = false;
-    final static String MQTT_TOGGLE_ACTION = "com.sinusgear.iot.lampapp.LampWidgetProvider.MQTT_TOGGLE";
+    final static String MQTT_TOGGLE_ACTION = "rocks.georgik.iot.lampapp.LampWidgetProvider.MQTT_TOGGLE";
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {

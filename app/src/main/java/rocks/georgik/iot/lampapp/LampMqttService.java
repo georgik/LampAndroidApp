@@ -1,4 +1,4 @@
-package com.sinusgear.iot.lampapp;
+package rocks.georgik.iot.lampapp;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -31,9 +31,9 @@ public class LampMqttService extends Service implements MqttCallbackExtended, IM
 
     private static final String TAG = LampMqttService.class.getCanonicalName();
 
-    public static final String MQTT_SERVICE_NAME = "com.sinusgear.iot.lampapp.LampMqttService";
-    final static String MQTT_RECEIVED_ACTION = "com.sinusgear.iot.lampapp.LampMqttService.MQTT_RECEIVED";
-    final static String MQTT_SEND_ACTION = "com.sinusgear.iot.lampapp.LampMqttService.MQTT_SEND";
+    public static final String MQTT_SERVICE_NAME = "rocks.georgik.iot.lampapp.LampMqttService";
+    final static String MQTT_RECEIVED_ACTION = "rocks.georgik.iot.lampapp.LampMqttService.MQTT_RECEIVED";
+    final static String MQTT_SEND_ACTION = "rocks.georgik.iot.lampapp.LampMqttService.MQTT_SEND";
 
     final String serverUri = "tcp://iot.georgik.rocks:1883";
 

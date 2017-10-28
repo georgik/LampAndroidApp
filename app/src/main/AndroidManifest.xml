@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.sinusgear.iot.lampapp">
+    package="rocks.georgik.iot.lampapp">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -11,7 +11,7 @@
     <application android:allowBackup="true" android:label="@string/app_name"
         android:icon="@drawable/lightbulbicon" android:theme="@style/AppTheme">
 
-        <activity android:name="com.sinusgear.iot.lampapp.MainActivity">
+        <activity android:name="rocks.georgik.iot.lampapp.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -19,7 +19,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name="com.sinusgear.iot.lampapp.LampWidgetProvider"
+        <receiver android:name="rocks.georgik.iot.lampapp.LampWidgetProvider"
             android:icon="@drawable/lightbulbicon"
             android:label="Lamp Widget"
             >
@@ -27,11 +27,11 @@
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <intent-filter>
-                <action android:name="com.sinusgear.iot.lampapp.LampMqttService.MQTT_RECEIVED"/>
+                <action android:name="rocks.georgik.iot.lampapp.LampMqttService.MQTT_RECEIVED"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
             <intent-filter>
-                <action android:name="com.sinusgear.iot.lampapp.LampWidgetProvider.MQTT_TOGGLE" />
+                <action android:name="rocks.georgik.iot.lampapp.LampWidgetProvider.MQTT_TOGGLE" />
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
@@ -39,7 +39,7 @@
         </receiver>
 
 
-        <service android:name="com.sinusgear.iot.lampapp.LampMqttService" >
+        <service android:name="rocks.georgik.iot.lampapp.LampMqttService" >
         </service>
         <service android:name="org.eclipse.paho.android.service.MqttService">
         </service>
